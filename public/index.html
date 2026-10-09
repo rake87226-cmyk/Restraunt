@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>La Bella — Home</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .user-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-left: auto;
+      position: relative;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+    .user-info:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+    }
+    .logout-btn {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .logout-btn:hover {
+      background: #c53030;
+      transform: translateY(-2px);
+    }
+    .login-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    /* History Dropdown */
+    .history-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      min-width: 280px;
+      z-index: 1000;
+      margin-top: 10px;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    .history-dropdown.show {
+      display: block;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .history-header {
+      padding: 12px 16px;
+      border-bottom: 2px solid #f0f0f0;
+      font-weight: 600;
+      color: #2d3748;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-header-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #a0aec0;
+      padding: 0;
+    }
+
+    .history-header-close:hover {
+      color: #2d3748;
+    }
+
+    .history-content {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .history-item:hover {
+      background: #f7fafc;
+      padding-left: 20px;
+    }
+
+    .history-item-title {
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .history-item-meta {
+      font-size: 0.85rem;
+      color: #718096;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .history-item-date {
+      color: #a0aec0;
+    }
+
+    .history-item-amount {
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .history-item-status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .history-item-status.completed {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+
+    .history-item-status.pending {
+      background: #feebc8;
+      color: #7c2d12;
+    }
+
+    .history-item-status.confirmed {
+      background: #bee3f8;
+      color: #2c5aa0;
+    }
+
+    .history-empty {
+      padding: 24px 16px;
+      text-align: center;
+      color: #a0aec0;
+      font-size: 0.9rem;
+    }
+
+    .history-empty-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .history-footer {
+      padding: 12px 16px;
+      border-top: 2px solid #f0f0f0;
+      text-align: center;
+    }
+
+    .view-all-history-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+
+    .view-all-history-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container" style="display: flex; align-items: center; justify-content: space-between;">
+      <h1 class="brand">La Bella</h1>
+      <nav style="display: flex; align-items: center; gap: 20px;">
+        <a href="#about">About</a>
+        <a href="menu.html">Menu</a>
+        <a href="reservation.html">Reservation</a>
+        <a href="contact.html">Contact</a>
+        <a href="feedback.html">Feedback</a>
+        <div class="user-section" id="userSection" style="display: none;">
+          <div class="user-info" onclick="toggleHistoryDropdown()">
+            <div class="user-avatar" id="userAvatar">U</div>
+            <span id="userName">User</span>
+          </div>
+          
+          <!-- History Dropdown -->
+          <div class="history-dropdown" id="historyDropdown">
+            <div class="history-header">
+              <span>📋 Your History</span>
+              <button class="history-header-close" onclick="toggleHistoryDropdown()">×</button>
+            </div>
+            <div class="history-content" id="historyContent">
+              <div class="history-empty">
+                <div class="history-empty-icon">📭</div>
+                <div>Loading...</div>
+              </div>
+            </div>
+            <div class="history-footer">
+              <button class="view-all-history-btn" onclick="openFullHistory()">View Full History</button>
+            </div>
+          </div>
+
+          <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+        <a href="login.html" class="login-btn" id="loginBtn" style="display: none;">Login</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h2>Welcome to La Bella</h2>
+      <p>Fresh food. Warm atmosphere. Reserve your table for a memorable meal.</p>
+      <a class="btn" href="reservation.html">Reserve a Table (₹100 advance)</a>
+    </section>
+
+
+
+    <section id="about">
+      <div class="about-wrapper container">
+        <div class="about-text">
+          <p class="small">About Us</p>
+          <h2>We've beem making healthy food last for 10 years</h2>
+          <p>
+            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Esse ab
+            eos omnis, nobis dignissimos perferendis et officia architecto,
+            fugiat possimus eaque qui ullam excepturi suscipit aliquid optio,
+            maiores praesentium soluta alias asperiores saepe commodi
+            consequatur? Perferendis est placeat facere aspernatur!
+          </p>
+        </div>
+        <div class="about-img">
+          <img src="https://i.postimg.cc/mgpwzmx9/about-photo.jpg" alt="food" />
+        </div>
+      </div>
+    </section>
+    <section id="about">
+      <div class="about-wrapper container">
+         <div class="about-imgs">
+          <img src="scan.jpg" alt="food" />
+        </div>
+        <div class="about-texts">
+          <p class="small"></p>
+          <h2>Our Menu</h2>
+          <p>
+            Scan the QR code to explore our diverse menu, featuring fresh ingredients and authentic flavors crafted to delight your palate.
+          </p>
+        </div>
+      </div>
+    </section>
+    
+    <section class="features">
+      <article>
+        <h3>Online Ordering</h3>
+        <p>Order from our menu and choose pickup or dine-in.</p>
+        <a class="btn" href="menu.html">View Menu</a>
+      </article>
+      <article>
+        <h3>Secure Reservations</h3>
+        <p>Confirm your booking with a ₹100 advance payment.</p>
+      </article>
+      <article>
+        <h3>Contact Us</h3>
+        <p>Questions? Reach out through the contact page.</p>
+        <a class="btn" href="contact.html">Contact</a>
+      </article>
+    </section>
+  </main>
+
+
+
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+  </script>
+
+
+<section class="cta-sections">
+    <h2>Ready for an Unforgettable Experience?</h2>
+    <p>Book your table today and discover why Bella Vista is New York's premier Italian restaurant.</p>
+
+    <div class="cta-buttonss">
+        <a href="reservation.html" class="btn btn-outline">📅 Make Reservation</a>
+        <a href="tel:5551234567" class="btn btn-dark">📞 Call (555) 123-4567</a>
+    </div>
+</section>
+
+<footer class="footers">
+    <div class="footer-containers">
+
+        <div class="footer-abouts">
+            <h3 class="logos">🍽️ Bella Vista</h3>
+            <p>
+                Experience authentic Italian cuisine in an elegant atmosphere.
+                Fresh ingredients, traditional recipes, and exceptional service since 1985.
+            </p>
+
+            <div class="social-iconss">
+                <a href="#">📘</a>
+                <a href="#">📸</a>
+                <a href="#">🐦</a>
+                <a href="#">▶️</a>
+            </div>
+        </div>
+
+        <div class="footer-linkss">
+            <h4>Quick Links</h4>
+            <ul>
+                <li><a href="#">Menu</a></li>
+                <li><a href="#">Reservations</a></li>
+                <li><a href="#">Reviews</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-contacts">
+            <h4>Contact Info</h4>
+            <ul>
+                <li>📍 123 Culinary Street, Downtown District<br>New York, NY 10001</li>
+                <li>📞 (555) 123-4567</li>
+                <li>✉️ info@bellavista.com</li>
+                <li>🕒 Mon–Sun: 11AM–11PM</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <div class="footer-bottoms">
+        © 2024 Bella Vista Restaurant. All rights reserved.
+    </div>
+</footer>
+
+<script>
+  // Check authentication and update UI
+  function checkAuthAndUpdateUI() {
+    const token = localStorage.getItem('userToken');
+    const userEmail = localStorage.getItem('userEmail');
+    const userName = localStorage.getItem('userName');
+    
+    const userSection = document.getElementById('userSection');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    if (token && userEmail) {
+      // User is logged in
+      userSection.style.display = 'flex';
+      loginBtn.style.display = 'none';
+      
+      document.getElementById('userName').textContent = userName || userEmail.split('@')[0];
+      const avatarInitial = (userName || userEmail).charAt(0).toUpperCase();
+      document.getElementById('userAvatar').textContent = avatarInitial;
+      
+      // Load history
+      loadUserHistory();
+    } else {
+      // User is not logged in
+      userSection.style.display = 'none';
+      loginBtn.style.display = 'inline-block';
+    }
+  }
+  
+  function logout() {
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    
+    // Call backend logout endpoint
+    fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('userToken')
+      }
+    }).catch(err => console.error('Logout error:', err));
+    
+    window.location.href = 'login.html';
+  }
+
+  // ===================== HISTORY FUNCTIONS =====================
+
+  function toggleHistoryDropdown() {
+    const dropdown = document.getElementById('historyDropdown');
+    dropdown.classList.toggle('show');
+  }
+
+  async function loadUserHistory() {
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) return;
+
+    try {
+      const response = await fetch('/api/user/history', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: userEmail, limit: 5 })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        displayHistoryInDropdown(data);
+      }
+    } catch (error) {
+      console.error('Error loading history:', error);
+    }
+  }
+
+  function displayHistoryInDropdown(data) {
+    const historyContent = document.getElementById('historyContent');
+    const { combined } = data;
+
+    if (!combined || combined.length === 0) {
+      historyContent.innerHTML = `
+        <div class="history-empty">
+          <div class="history-empty-icon">📭</div>
+          <div>No orders or reservations yet</div>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    combined.forEach(item => {
+      const date = new Date(item.created_at);
+      const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const statusClass = item.status.toLowerCase();
+      
+      if (item.type === 'order') {
+        html += `
+          <div class="history-item" onclick="openOrderDetail(${item.id})">
+            <div class="history-item-title">🍕 Food Order #${item.id}</div>
+            <div class="history-item-meta">
+              <span class="history-item-date">${formattedDate}</span>
+              <span class="history-item-amount">₹${item.total.toFixed(2)}</span>
+            </div>
+            <span class="history-item-status ${statusClass}">${item.status.toUpperCase()}</span>
+          </div>
+        `;
+      } else if (item.type === 'reservation') {
+        html += `
+          <div class="history-item" onclick="openReservationDetail(${item.id})">
+            <div class="history-item-title">🪑 Reservation #${item.id}</div>
+            <div class="history-item-meta">
+              <span class="history-item-date">${item.date} ${item.time}</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #718096; margin-top: 4px;">
+              ${item.party_size} guests • ${item.status.toUpperCase()}
+            </div>
+          </div>
+        `;
+      }
+    });
+
+    historyContent.innerHTML = html;
+  }
+
+  function openOrderDetail(orderId) {
+    console.log('Opening order:', orderId);
+    window.location.href = 'order-history.html?id=' + orderId;
+  }
+
+  function openReservationDetail(reservationId) {
+    console.log('Opening reservation:', reservationId);
+    window.location.href = 'reservation-history.html?id=' + reservationId;
+  }
+
+  function openFullHistory() {
+    window.location.href = 'user-history.html';
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('historyDropdown');
+    const userInfo = document.querySelector('.user-info');
+    
+    if (dropdown && !dropdown.contains(event.target) && !userInfo.contains(event.target)) {
+      dropdown.classList.remove('show');
+    }
+  });
+  
+  // Check auth status on page load
+  document.addEventListener('DOMContentLoaded', checkAuthAndUpdateUI);
+</script>
+
+</body>
+
+</html>

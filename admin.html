@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Admin Dashboard - La Bella</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin-dashboard.css">
+  <script>
+    // Check admin authentication on page load
+    if (!sessionStorage.getItem('adminToken')) {
+      window.location.href = 'admin-login.html';
+    }
+  </script>
+</head>
+<body class="admin-body">
+  <header class="admin-nav">
+    <div class="admin-container">
+      <div class="admin-nav-brand">
+        <span class="admin-logo">📊</span>
+        <h1>Admin Dashboard - La Bella</h1>
+      </div>
+      <nav class="admin-nav-menu">
+        <a href="index.html" class="nav-link">🏠 Public Site</a>
+        <a href="admin.html" class="nav-link active">📊 Dashboard</a>
+        <a href="#" class="nav-link logout-link" onclick="adminLogout(event)">🚪 Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div class="admin-container">
+      <!-- Header Section -->
+      <div class="admin-header">
+        <div>
+          <h2 class="page-title">📋 Booking Management</h2>
+          <p class="page-subtitle">View and manage all reservations and food orders in real-time</p>
+        </div>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">TOTAL BOOKINGS</div>
+          <div class="stat-value" id="total-bookings">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">CONFIRMED</div>
+          <div class="stat-value" id="total-confirmed">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">TOTAL REVENUE</div>
+          <div class="stat-value" id="total-revenue">₹0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">LAST UPDATED</div>
+          <div class="stat-value timestamp" id="last-updated">--:--:-- --</div>
+        </div>
+      </div>
+
+      <!-- Filters and Controls -->
+      <div class="filters-section">
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Search by name, email, or USN..." class="search-input">
+        </div>
+        <div class="filter-controls">
+          <select id="event-filter" class="filter-select">
+            <option value="all">📅 All Events</option>
+            <option value="reservations">🍽️ Reservations</option>
+            <option value="orders">🍕 Food Orders</option>
+          </select>
+          <select id="status-filter" class="filter-select">
+            <option value="all">📊 All Status</option>
+            <option value="confirmed">✅ Confirmed</option>
+            <option value="pending">⏳ Pending</option>
+            <option value="paid">💳 Paid</option>
+          </select>
+          <button class="btn-control refresh-btn" id="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
+          <button class="btn-control export-btn" id="export-btn" onclick="exportCSV()">📥 Export CSV</button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs-section">
+        <button class="tab-btn active" data-tab="reservations">🍽️ Reservations</button>
+        <button class="tab-btn" data-tab="orders">🍕 Food Orders</button>
+        <button class="tab-btn" data-tab="menu">🍴 Food Items</button>
+        <button class="tab-btn" data-tab="feedback">⭐ Feedback</button>
+      </div>
+
+      <!-- Reservations Table -->
+      <div id="reservations-tab" class="tab-content active">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Event</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone no</th>
+              <th>Party Size</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Payment</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="reservations-table-body">
+            <tr><td colspan="11" style="text-align:center;padding:20px;">Loading...</td></tr>
+          </tbody>
+        </table>
+        <div id="no-reservations" class="empty-state" style="display:none;">
+          <p>No reservations found</p>
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div id="orders-tab" class="tab-content">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Order ID</th>
+              <th>Customer Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Items</th>
+              <th>Total Amount</th>
+              <th>Order Date</th>
+              <th>Status</th>
+              <th>Payment</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body">
+            <tr><td colspan="11" style="text-align:center;padding:20px;">Loading...</td></tr>
+          </tbody>
+        </table>
+        <div id="no-orders" class="empty-state" style="display:none;">
+          <p>No orders found</p>
+        </div>
+      </div>
+
+      <!-- Food Items Management Tab -->
+      <div id="menu-tab" class="tab-content">
+        <div style="margin-bottom: 20px;">
+          <button class="btn-control" id="add-food-btn" onclick="openAddFoodModal()" style="background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">➕ Add New Food Item</button>
+        </div>
+
+        <!-- Add Food Item Modal -->
+        <div id="add-food-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000;">
+          <div style="background: white; margin: 10% auto; padding: 30px; border-radius: 8px; max-width: 500px; max-height: 80vh; overflow-y: auto;">
+            <h3>Add New Food Item</h3>
+            <form id="add-food-form" onsubmit="handleAddFood(event)">
+              <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Food Name *</label>
+                <input type="text" id="food-name" required placeholder="e.g., Margherita Pizza" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+              </div>
+
+              <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Description</label>
+                <textarea id="food-description" placeholder="e.g., Classic pizza with fresh tomatoes and mozzarella" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; min-height: 80px;"></textarea>
+              </div>
+
+              <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Price (₹) *</label>
+                <input type="number" id="food-price" required placeholder="e.g., 299" step="0.01" min="0" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+              </div>
+
+              <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Category *</label>
+                <select id="food-category" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                  <option value="">-- Select Category --</option>
+                  <option value="fast_food">🍕 Fast Food</option>
+                  <option value="veg">🥗 Vegetarian</option>
+                  <option value="breads">🍞 Breads & Rotis</option>
+                </select>
+              </div>
+
+              <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Image URL</label>
+                <input type="url" id="food-image" placeholder="https://example.com/image.jpg" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+              </div>
+
+              <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button type="submit" style="flex: 1; background: #4CAF50; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Add Item</button>
+                <button type="button" onclick="closeAddFoodModal()" style="flex: 1; background: #f44336; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Image</th>
+              <th>Food Name</th>
+              <th>Description</th>
+              <th>Price</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="menu-table-body">
+            <tr><td colspan="6" style="text-align:center;padding:20px;">Loading...</td></tr>
+          </tbody>
+        </table>
+        <div id="no-menu" class="empty-state" style="display:none;">
+          <p>No food items found</p>
+        </div>
+      </div>
+
+      <!-- Feedback Table -->
+      <div id="feedback-tab" class="tab-content">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Rating</th>
+              <th>Comment</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="feedback-table-body">
+            <tr><td colspan="8" style="text-align:center;padding:20px;">Loading...</td></tr>
+          </tbody>
+        </table>
+        <div id="no-feedback" class="empty-state" style="display:none;">
+          <p>No feedback found</p>
+        </div>
+      </div>
+
+  <script>
+    let allReservations = [];
+    let allOrders = [];
+    let allFeedback = [];
+    let allMenuItems = [];
+    let currentTab = 'reservations';
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        currentTab = e.target.dataset.tab;
+        document.getElementById(currentTab + '-tab').classList.add('active');
+        filterAndDisplayData();
+      });
+    });
+
+    async function loadData() {
+      try {
+        // Load Reservations
+        const resRes = await fetch('/api/admin/reservations');
+        allReservations = await resRes.json();
+        
+        // Load Orders
+        const ordRes = await fetch('/api/admin/orders');
+        allOrders = await ordRes.json();
+        
+        // Load Feedback
+        const fbRes = await fetch('/api/admin/feedback');
+        allFeedback = await fbRes.json();
+
+        // Load Menu Items
+        await loadMenuData();
+        
+        updateStats();
+        filterAndDisplayData();
+      } catch (err) {
+        console.error('Error loading data:', err);
+      }
+    }
+
+    async function loadMenuData() {
+      try {
+        const res = await fetch('/api/admin/menu');
+        allMenuItems = await res.json();
+        displayMenuItems();
+      } catch (err) {
+        console.error('Error loading menu data:', err);
+      }
+    }
+
+    function updateStats() {
+      // Safety check - ensure arrays exist
+      if (!allReservations || !allOrders) return;
+      
+      const totalBookings = allReservations.length + allOrders.length;
+      const confirmed = allReservations.filter(r => r.status === 'confirmed' || r.paid).length;
+      const totalRevenue = allReservations.reduce((sum, r) => sum + 100, 0) + 
+                          allOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+      
+      document.getElementById('total-bookings').textContent = totalBookings;
+      document.getElementById('total-confirmed').textContent = confirmed;
+      document.getElementById('total-revenue').textContent = '₹' + totalRevenue.toLocaleString();
+      document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+    }
+
+    function displayMenuItems() {
+      const tbody = document.getElementById('menu-table-body');
+      if (allMenuItems.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">No food items found</td></tr>';
+      } else {
+        tbody.innerHTML = allMenuItems.map((item, idx) => {
+          const imageHtml = item.image ? 
+            `<img src="${item.image}" style="width: 50px; height: 50px; border-radius: 4px; object-fit: cover;" alt="${item.name}">` :
+            `<div style="width: 50px; height: 50px; background: #e0e0e0; display: flex; align-items: center; justify-content: center; border-radius: 4px;">📷</div>`;
+          
+          const categoryLabel = item.category === 'fast_food' ? '🍕 Fast Food' : 
+                                item.category === 'veg' ? '🥗 Vegetarian' :
+                                item.category === 'breads' ? '🍞 Breads' : '📋 All';
+          
+          return `
+            <tr>
+              <td>${idx + 1}</td>
+              <td>${imageHtml}</td>
+              <td><strong>${item.name}</strong></td>
+              <td>${item.description || '-'}</td>
+              <td><strong>₹${parseFloat(item.price).toFixed(2)}</strong> <br> <span style="font-size:0.8em; color:#666;">${categoryLabel}</span></td>
+              <td>
+                <button class="btn-action view" onclick="viewFoodItem(${item.id})" style="margin-right: 5px;">View</button>
+                <button class="btn-action" onclick="editFoodItem(${item.id})" style="margin-right: 5px; background: #2196F3;">Edit</button>
+                <button class="btn-action" onclick="deleteFoodItem(${item.id})" style="background: #f44336;">Delete</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    function filterAndDisplayData() {
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      const eventFilter = document.getElementById('event-filter').value;
+      const statusFilter = document.getElementById('status-filter').value;
+
+      if (currentTab === 'reservations') {
+        displayReservations(searchTerm, statusFilter, eventFilter);
+      } else if (currentTab === 'orders') {
+        displayOrders(searchTerm, statusFilter, eventFilter);
+      } else if (currentTab === 'menu') {
+        displayMenuItems();
+      } else if (currentTab === 'feedback') {
+        displayFeedback(searchTerm);
+      }
+    }
+
+    function displayReservations(search, status, event) {
+      const tbody = document.getElementById('reservations-table-body');
+      let filtered = allReservations;
+
+      if (search) {
+        filtered = filtered.filter(r => 
+          r.name.toLowerCase().includes(search) || 
+          r.email.toLowerCase().includes(search) ||
+          r.phone.includes(search)
+        );
+      }
+
+      if (status !== 'all') {
+        filtered = filtered.filter(r => {
+          if (status === 'paid') return r.paid;
+          return r.status === status;
+        });
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;">No reservations found</td></tr>';
+      } else {
+        tbody.innerHTML = filtered.map((r, idx) => {
+          const displayStatus = r.paid ? 'paid' : (r.status || 'pending');
+          return `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>Reservation</td>
+            <td><strong>${r.name}</strong></td>
+            <td>${r.email || '-'}</td>
+            <td>${r.phone || '-'}</td>
+            <td>Party Size: ${r.party_size}</td>
+            <td>₹100</td>
+            <td>${r.date} ${r.time}</td>
+            <td><span class="status-badge ${displayStatus}">${displayStatus}</span></td>
+            <td><span class="payment-badge ${r.paid ? 'completed' : 'pending'}">${r.paid ? 'completed' : 'pending'}</span></td>
+            <td><button class="btn-action view" onclick="viewReservation(${r.id})">View</button></td>
+          </tr>
+        `;
+        }).join('');
+      }
+    }
+
+    function displayOrders(search, status, event) {
+      const tbody = document.getElementById('orders-table-body');
+      let filtered = allOrders;
+
+      if (search) {
+        filtered = filtered.filter(o => 
+          o.name.toLowerCase().includes(search) || 
+          o.email.toLowerCase().includes(search) ||
+          o.phone.includes(search)
+        );
+      }
+
+      if (status !== 'all') {
+        filtered = filtered.filter(o => {
+          if (status === 'paid') return o.paid;
+          return o.status === status;
+        });
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;">No orders found</td></tr>';
+      } else {
+        tbody.innerHTML = filtered.map((o, idx) => {
+          const itemsList = Array.isArray(o.items) ? 
+            o.items.map(i => `${i.name} (x${i.quantity})`).join(', ') : 
+            'N/A';
+          const displayStatus = o.paid ? 'paid' : (o.status || 'pending');
+          return `
+            <tr>
+              <td>${idx + 1}</td>
+              <td>#${o.id}</td>
+              <td><strong>${o.name}</strong></td>
+              <td>${o.email || '-'}</td>
+              <td>${o.phone || '-'}</td>
+              <td>${itemsList}</td>
+              <td>₹${o.total}</td>
+              <td>${o.created_at?.split(' ')[0] || '-'}</td>
+              <td><span class="status-badge ${displayStatus}">${displayStatus}</span></td>
+              <td><span class="payment-badge ${o.paid ? 'completed' : 'pending'}">${o.paid ? 'completed' : 'pending'}</span></td>
+              <td><button class="btn-action view" onclick="viewOrder(${o.id})">View</button></td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    function displayFeedback(search) {
+      const tbody = document.getElementById('feedback-table-body');
+      let filtered = allFeedback;
+
+      if (search) {
+        filtered = filtered.filter(f => 
+          (f.name && f.name.toLowerCase().includes(search)) || 
+          (f.email && f.email.toLowerCase().includes(search)) ||
+          (f.phone && f.phone.includes(search))
+        );
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;">No feedback found</td></tr>';
+      } else {
+        tbody.innerHTML = filtered.map((f, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${f.name || 'Anonymous'}</td>
+            <td>${f.email || '-'}</td>
+            <td>${f.phone || '-'}</td>
+            <td><span class="rating-badge">⭐ ${f.rating}/5</span></td>
+            <td>${f.comment || '-'}</td>
+            <td>${f.created_at?.split(' ')[0] || '-'}</td>
+            <td><button class="btn-action view" onclick="alert('${f.comment}')">View</button></td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // ============= FOOD ITEM MANAGEMENT FUNCTIONS =============
+    
+    function openAddFoodModal() {
+      document.getElementById('add-food-modal').style.display = 'block';
+      document.getElementById('add-food-form').reset();
+    }
+
+    function closeAddFoodModal() {
+      document.getElementById('add-food-modal').style.display = 'none';
+    }
+
+    async function handleAddFood(event) {
+      event.preventDefault();
+      
+      const name = document.getElementById('food-name').value;
+      const description = document.getElementById('food-description').value;
+      const price = document.getElementById('food-price').value;
+      const image = document.getElementById('food-image').value;
+      const category = document.getElementById('food-category').value;
+
+      if (!category) {
+        showNotification('Please select a category', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/admin/menu', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description, price, image, category })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showNotification(data.message, 'success');
+          closeAddFoodModal();
+          await loadMenuData();
+          updateStats();
+        } else {
+          showNotification(data.error || 'Failed to add food item', 'error');
+        }
+      } catch (err) {
+        console.error('Error adding food item:', err);
+        showNotification('Error adding food item', 'error');
+      }
+    }
+
+    function viewFoodItem(id) {
+      const item = allMenuItems.find(m => m.id === id);
+      if (item) {
+        alert(`Food Item #${id}\nName: ${item.name}\nDescription: ${item.description || 'N/A'}\nPrice: ₹${item.price}`);
+      }
+    }
+
+    function editFoodItem(id) {
+      const item = allMenuItems.find(m => m.id === id);
+      if (!item) return;
+
+      const newName = prompt('Food Name:', item.name);
+      if (newName === null) return;
+
+      const newDesc = prompt('Description:', item.description || '');
+      if (newDesc === null) return;
+
+      const newPrice = prompt('Price (₹):', item.price);
+      if (newPrice === null) return;
+
+      const categoryOptions = ['fast_food', 'veg', 'breads'];
+      const currentCategoryIndex = categoryOptions.indexOf(item.category || 'all');
+      const newCategoryIndex = prompt(
+        'Category (0=Fast Food, 1=Veg, 2=Breads):',
+        currentCategoryIndex >= 0 ? currentCategoryIndex : 0
+      );
+      if (newCategoryIndex === null) return;
+      const newCategory = categoryOptions[parseInt(newCategoryIndex)] || 'all';
+
+      const newImage = prompt('Image URL:', item.image || '');
+      if (newImage === null) return;
+
+      updateFoodItem(id, newName, newDesc, newPrice, newImage, newCategory);
+    }
+
+    async function updateFoodItem(id, name, description, price, image, category) {
+      try {
+        const response = await fetch(`/api/admin/menu/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description, price, image, category })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showNotification(data.message, 'success');
+          await loadMenuData();
+          updateStats();
+        } else {
+          showNotification(data.error || 'Failed to update food item', 'error');
+        }
+      } catch (err) {
+        console.error('Error updating food item:', err);
+        showNotification('Error updating food item', 'error');
+      }
+    }
+
+    async function deleteFoodItem(id) {
+      const item = allMenuItems.find(m => m.id === id);
+      if (!item) return;
+
+      if (!confirm(`Are you sure you want to delete "${item.name}"? This action cannot be undone.`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/admin/menu/${id}`, {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showNotification(data.message, 'success');
+          await loadMenuData();
+          updateStats();
+        } else {
+          showNotification(data.error || 'Failed to delete food item', 'error');
+        }
+      } catch (err) {
+        console.error('Error deleting food item:', err);
+        showNotification('Error deleting food item', 'error');
+      }
+    }
+
+    // Notification system
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+      `;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    function viewReservation(id) {
+      const res = allReservations.find(r => r.id === id);
+      if (res) {
+        alert(`Reservation #${id}\nName: ${res.name}\nDate: ${res.date} ${res.time}\nParty Size: ${res.party_size}\nStatus: ${res.status}\nPaid: ${res.paid ? 'Yes' : 'No'}`);
+      }
+    }
+
+    function viewOrder(id) {
+      const order = allOrders.find(o => o.id === id);
+      if (order) {
+        const items = Array.isArray(order.items) ? order.items.map(i => `${i.name} (x${i.quantity})`).join(', ') : 'N/A';
+        alert(`Order #${id}\nCustomer: ${order.name}\nItems: ${items}\nTotal: ₹${order.total}\nStatus: ${order.status}\nPaid: ${order.paid ? 'Yes' : 'No'}`);
+      }
+    }
+
+    function refreshData() {
+      document.getElementById('refresh-btn').textContent = '⏳ Refreshing...';
+      loadData().then(() => {
+        document.getElementById('refresh-btn').textContent = '🔄 Refresh';
+        showNotification('✅ Data refreshed successfully', 'success');
+      });
+    }
+
+    function exportCSV() {
+      let data = [];
+      let headers = [];
+
+      if (currentTab === 'reservations') {
+        headers = ['ID', 'Name', 'Email', 'Phone', 'Date', 'Time', 'Party Size', 'Status', 'Paid'];
+        data = allReservations.map(r => [r.id, r.name, r.email, r.phone, r.date, r.time, r.party_size, r.status, r.paid]);
+      } else if (currentTab === 'orders') {
+        headers = ['ID', 'Customer Name', 'Email', 'Phone', 'Total', 'Status', 'Paid', 'Date'];
+        data = allOrders.map(o => [o.id, o.name, o.email, o.phone, o.total, o.status, o.paid, o.created_at]);
+      } else if (currentTab === 'menu') {
+        headers = ['ID', 'Name', 'Description', 'Price'];
+        data = allMenuItems.map(m => [m.id, m.name, m.description, m.price]);
+      }
+
+      let csv = headers.join(',') + '\n';
+      data.forEach(row => {
+        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentTab}-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    }
+
+    // Admin logout function
+    function adminLogout(event) {
+      event.preventDefault();
+      if (confirm('Are you sure you want to logout?')) {
+        sessionStorage.removeItem('adminToken');
+        sessionStorage.removeItem('adminUsername');
+        localStorage.removeItem('rememberAdmin');
+        window.location.href = 'admin-login.html';
+      }
+    }
+
+    // Search and filter event listeners
+    document.getElementById('search-input').addEventListener('input', filterAndDisplayData);
+    document.getElementById('event-filter').addEventListener('change', filterAndDisplayData);
+    document.getElementById('status-filter').addEventListener('change', filterAndDisplayData);
+
+    // Close modal when clicking outside
+    document.getElementById('add-food-modal').addEventListener('click', function(event) {
+      if (event.target === this) {
+        closeAddFoodModal();
+      }
+    });
+
+    // Initial load
+    loadData();
+
+    // Auto-refresh every 30 seconds
+    setInterval(loadData, 30000);
+  </script>
+
+</body>
+</html>

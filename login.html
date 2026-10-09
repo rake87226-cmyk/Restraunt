@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - La Bella Restaurant</title>
+    <link rel="stylesheet" href="login.css">
+    <!-- Google Identity Services Library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <div class="login-container">
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <h1>🍕 La Bella</h1>
+            <p>Restaurant Management System</p>
+        </div>
+
+        <!-- Main Login Card -->
+        <div class="login-card">
+            <!-- Email Section -->
+            <div id="emailSection" class="form-section active">
+                <h2>Welcome Back</h2>
+                <p class="subtitle">Enter your email to get started</p>
+                
+                <form id="emailForm">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            placeholder="you@example.com" 
+                            required
+                        >
+                        <span class="error-message" id="emailError"></span>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <span id="emailBtnText">Send OTP</span>
+                        <span id="emailSpinner" class="spinner" style="display: none;"></span>
+                    </button>
+                </form>
+
+  
+                <div class="divider">
+                    <span>or use social</span>
+                </div>
+
+                <!-- Google Sign-In Button -->
+                <div id="g_id_onload"
+                     data-client_id="gothic-talent-480507-c0.apps.googleusercontent.com"
+                     data-callback="handleGoogleSignIn"
+                     data-ux_mode="popup">
+                </div>
+                <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline"></div>
+
+                <p style="text-align: center; color: #a0aec0; font-size: 0.85rem; margin-top: 15px;">
+                    Note: Replace YOUR_GOOGLE_CLIENT_ID in the HTML
+                </p>
+            </div>
+
+            <!-- OTP Section -->
+            <div id="otpSection" class="form-section">
+                <div class="back-button">
+                    <button type="button" id="backBtn" class="btn-link">← Change Email</button>
+                </div>
+
+                <h2>Enter OTP</h2>
+                <p class="subtitle">We've sent a 6-digit code to <span id="emailDisplay"></span></p>
+                
+                <form id="otpForm">
+                    <div class="otp-inputs">
+                        <input type="text" maxlength="1" class="otp-input" placeholder="0" required>
+                        <input type="text" maxlength="1" class="otp-input" placeholder="0" required>
+                        <input type="text" maxlength="1" class="otp-input" placeholder="0" required>
+                        <input type="text" maxlength="1" class="otp-input" placeholder="0" required>
+                        <input type="text" maxlength="1" class="otp-input" placeholder="0" required>
+                        <input type="text" maxlength="1" class="otp-input" placeholder="0" required>
+                    </div>
+                    <span class="error-message" id="otpError"></span>
+
+                    <div class="otp-info">
+                        <p>Didn't receive the code? <button type="button" id="resendBtn" class="btn-link">Resend</button></p>
+                        <p class="timer">Resend available in <span id="timer">60</span>s</p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <span id="otpBtnText">Verify & Login</span>
+                        <span id="otpSpinner" class="spinner" style="display: none;"></span>
+                    </button>
+                </form>
+
+                <div class="security-info">
+                    <p>🔒 Your login is secure and encrypted</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="login-footer">
+            <p>&copy; 2025 La Bella Restaurant. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>
